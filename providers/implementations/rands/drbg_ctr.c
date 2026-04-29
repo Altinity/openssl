@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 2011-2025 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the Apache License 2.0 (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -20,6 +20,7 @@
 #include "prov/providercommon.h"
 #include "prov/provider_ctx.h"
 #include "drbg_local.h"
+#include "internal/common.h"
 
 #if defined(__has_feature)
 # if __has_feature(memory_sanitizer)
@@ -94,6 +95,8 @@ static void ctr_XOR(PROV_DRBG_CTR *ctr, const unsigned char *in, size_t inlen)
      * are XORing. So just process however much input we have.
      */
     n = inlen < ctr->keylen ? inlen : ctr->keylen;
+    if (!ossl_assert(n <= sizeof(ctr->K)))
+        return;
     for (i = 0; i < n; i++)
         ctr->K[i] ^= in[i];
     if (inlen <= ctr->keylen)

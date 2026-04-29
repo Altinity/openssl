@@ -1,4 +1,4 @@
-# Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+# Copyright 2021-2025 The OpenSSL Project Authors. All Rights Reserved.
 #
 # Licensed under the Apache License 2.0 (the "License").  You may not use
 # this file except in compliance with the License.  You can obtain a copy
@@ -19,26 +19,27 @@ jobs:
       matrix:
         platform:
           - arch: win64
-            os: windows-2019
+            os: windows-2022
             config: enable-fips
           - arch: win64
-            os: windows-2022
+            os: windows-2025
             config: enable-fips no-thread-pool no-quic
           - arch: win32
-            os: windows-2022
+            os: windows-2025
             config: --strict-warnings no-fips
     runs-on: ${{ matrix.platform.os }}
     steps:
     - uses: actions/checkout@v4
     - name: checkout fuzz/corpora submodule
       run: git submodule update --init --depth 1 fuzz/corpora
-    - uses: ilammy/msvc-dev-cmd@v1
+    - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 #v1.13.0
       with:
         arch: ${{ matrix.platform.arch }}
-    - uses: ilammy/setup-nasm@v1
-      with:
-        platform: ${{ matrix.platform.arch }}
-    - uses: shogo82148/actions-setup-perl@v1
+    - name: install nasm
+      run: |
+        choco install nasm ${{ matrix.platform.arch == 'win32' && '--x86' || '' }}
+        "C:\Program Files${{ matrix.platform.arch == 'win32' && ' (x86)' || '' }}\NASM" | Out-File -FilePath "$env:GITHUB_PATH" -Append
+    - uses: shogo82148/actions-setup-perl@49c14f24551d2de3bf56fb107a869c3760b1875e #v1.33.0
     - name: prepare the build directory
       run: mkdir _build
     - name: config
@@ -50,7 +51,7 @@ jobs:
       working-directory: _build
       run: nmake /S
     - name: download coreinfo
-      uses: suisei-cn/actions-download-file@v1.6.0
+      uses: suisei-cn/actions-download-file@818d6b7dc8fe73f2f924b6241f2b1134ca1377d9 #v1.6.0
       with:
         url: "https://download.sysinternals.com/files/Coreinfo.zip"
         target: _build/coreinfo/
@@ -75,15 +76,14 @@ jobs:
     strategy:
       matrix:
         os:
-# Reducing CI footprint  - windows-2019
           - windows-2022
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - name: checkout fuzz/corpora submodule
       run: git submodule update --init --depth 1 fuzz/corpora
-    - uses: ilammy/msvc-dev-cmd@v1
-    - uses: shogo82148/actions-setup-perl@v1
+    - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 #v1.13.0
+    - uses: shogo82148/actions-setup-perl@49c14f24551d2de3bf56fb107a869c3760b1875e #v1.33.0
     - name: prepare the build directory
       run: mkdir _build
     - name: config
@@ -95,7 +95,7 @@ jobs:
       working-directory: _build
       run: nmake /S
     - name: download coreinfo
-      uses: suisei-cn/actions-download-file@v1.6.0
+      uses: suisei-cn/actions-download-file@818d6b7dc8fe73f2f924b6241f2b1134ca1377d9 #v1.6.0
       with:
         url: "https://download.sysinternals.com/files/Coreinfo.zip"
         target: _build/coreinfo/
@@ -113,15 +113,14 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-2019
-# Reducing CI footprint  - windows-2022
+          - windows-2022
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
     - name: checkout fuzz/corpora submodule
       run: git submodule update --init --depth 1 fuzz/corpora
-    - uses: ilammy/msvc-dev-cmd@v1
-    - uses: shogo82148/actions-setup-perl@v1
+    - uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 #v1.13.0
+    - uses: shogo82148/actions-setup-perl@49c14f24551d2de3bf56fb107a869c3760b1875e #v1.33.0
     - name: prepare the build directory
       run: mkdir _build
     - name: config
@@ -133,7 +132,7 @@ jobs:
       working-directory: _build
       run: nmake # verbose, so no /S here
     - name: download coreinfo
-      uses: suisei-cn/actions-download-file@v1.6.0
+      uses: suisei-cn/actions-download-file@818d6b7dc8fe73f2f924b6241f2b1134ca1377d9 #v1.6.0
       with:
         url: "https://download.sysinternals.com/files/Coreinfo.zip"
         target: _build/coreinfo/
@@ -152,9 +151,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - windows-2019
-# really worth while running, too? cygwin should mask this
-#          - windows-2022
+          - windows-2022
         platform:
           - arch: win64
             config: -DCMAKE_C_COMPILER=gcc --strict-warnings no-fips
@@ -170,7 +167,7 @@ jobs:
     steps:
 # Checkout before cygwin can mess with PATH...
     - uses: actions/checkout@v4
-    - uses: cygwin/cygwin-install-action@master
+    - uses: cygwin/cygwin-install-action@f61179d72284ceddc397ed07ddb444d82bf9e559 #v5
       with:
          packages: perl git make gcc-core
     - name: Check repo
